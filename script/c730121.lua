@@ -1,10 +1,4 @@
--- ============================================================
--- Card Name: The Blooming World of Nightbloom
--- Passcode : 730121
--- Type     : Spell / Normal
--- Archetype: Nightbloom (0xb24), Flower Spirit (0x702)
--- ============================================================
-
+--The Blooming World of Nightbloom
 local s,id=GetID()
 
 function s.initial_effect(c)
@@ -22,7 +16,7 @@ function s.initial_effect(c)
 	e1:SetCode(EFFECT_CANNOT_SSET)
 	c:RegisterEffect(e1)
 
-	-- Cho phép kích hoạt từ tay lên sân trong lượt đối thủ
+	-- Activate from hand during opponent's turn
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
 	e2:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
@@ -31,9 +25,7 @@ function s.initial_effect(c)
 	e2:SetCondition(s.handcon)
 	c:RegisterEffect(e2)
 
-	-- ============================================================
-	-- Hiệu ứng kích hoạt chính
-	-- ============================================================
+	-- Main activation effect
 	local e3=Effect.CreateEffect(c)
 	e3:SetCategory(CATEGORY_DECKDES+CATEGORY_DESTROY)
 	e3:SetType(EFFECT_TYPE_ACTIVATE)
@@ -47,14 +39,10 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 end
 
--- Điều kiện kích hoạt từ tay: Chỉ trong lượt đối thủ
 function s.handcon(e)
 	return Duel.GetTurnPlayer()~=e:GetHandlerPlayer()
 end
 
--- Điều kiện kích hoạt:
--- Lượt mình: Chỉ ở Main Phase và Chain Link = 0 (Normal Spell thuần túy, không nháy chain)
--- Lượt đối thủ: Tự do
 function s.actcon(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetTurnPlayer()==tp then
 		local ph=Duel.GetCurrentPhase()
@@ -64,9 +52,6 @@ function s.actcon(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- ============================================================
--- Khóa Deck: Chỉ cho phép dùng Spell Cards
--- ============================================================
 function s.lock_deck(c,tp)
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
@@ -145,8 +130,30 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	local is_opp_turn=(Duel.GetTurnPlayer()~=tp)
 
 	if is_opp_turn then
-		-- 1. Cả 2 người chơi để lộ bài trên tay
 		local h1=Duel.GetFieldGroup(tp,LOCATION_HAND,0)
 		local h2=Duel.GetFieldGroup(tp,0,LOCATION_HAND)
 		if #h1>0 then Duel.ConfirmCards(1-tp,h1) end
-		if #h2>0 then Duel.ConfirmCards(tp,h2
+		if #h2>0 then Duel.ConfirmCards(tp,h2) end
+
+		local count=Duel.GetMatchingGroupCount(Card.IsType,tp,LOCATION_HAND+LOCATION_ONFIELD+LOCATION_GRAVE,LOCATION_HAND+LOCATION_ONFIELD+LOCATION_GRAVE,nil,TYPE_SPELL)
+		local opp_deck_ct=Duel.GetFieldGroupCount(1-tp,LOCATION_DECK,0)
+		if count>0 and opp_deck_ct>0 then
+			local destroy_ct=math.min(count,opp_deck_ct)
+			local g=Duel.GetDecktopGroup(1-tp,destroy_ct)
+			Duel.DisableShuffleCheck()
+			Duel.Destroy(g,REASON_EFFECT)
+		end
+	else
+		local e1=Effect.CreateEffect(c)
+		e1:SetType(EFFECT_TYPE_FIELD)
+		e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
+		e1:SetTargetRange(LOCATION_ONFIELD,0)
+		e1:SetValue(s.indval)
+		e1:SetReset(RESET_PHASE+PHASE_END)
+		Duel.RegisterEffect(e1,tp)
+	end
+end
+
+function s.indval(e,re,rp)
+	return not re:IsActiveType(TYPE_SPELL)
+end
