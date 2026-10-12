@@ -14,29 +14,38 @@ function s.initial_effect(c)
 	e0b:SetValue(0xb24)
 	c:RegisterEffect(e0b)
 
-	-- Activate from hand during opponent's turn
+	-- Biến thành Quick-Play CHỈ TRONG LƯỢT ĐỐI THỦ
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e1:SetCode(EFFECT_QP_ACT_IN_NTPHAND)
+	e1:SetCode(EFFECT_BECOME_QUICK)
 	e1:SetRange(LOCATION_HAND)
-	e1:SetCondition(s.handcon)
+	e1:SetCondition(s.quickcon)
 	c:RegisterEffect(e1)
 
-	-- Main activation effect
+	-- Kích hoạt từ tay không cần Set CHỈ TRONG LƯỢT ĐỐI THỦ
 	local e2=Effect.CreateEffect(c)
-	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_DRAW+CATEGORY_TOGRAVE+CATEGORY_TODECK)
-	e2:SetType(EFFECT_TYPE_ACTIVATE)
-	e2:SetCode(EVENT_FREE_CHAIN)
-	e2:SetHintTiming(0,TIMINGS_CHECK_MONSTER+TIMING_MAIN_END)
-	e2:SetCountLimit(1,id+EFFECT_COUNT_CODE_OATH)
-	e2:SetCondition(s.actcon)
-	e2:SetTarget(s.target)
-	e2:SetOperation(s.activate)
+	e2:SetType(EFFECT_TYPE_SINGLE)
+	e2:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e2:SetCode(EFFECT_QP_ACT_IN_NTPHAND)
+	e2:SetRange(LOCATION_HAND)
+	e2:SetCondition(s.quickcon)
 	c:RegisterEffect(e2)
+
+	-- Hiệu ứng kích hoạt chính
+	local e3=Effect.CreateEffect(c)
+	e3:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_DRAW+CATEGORY_TOGRAVE+CATEGORY_TODECK)
+	e3:SetType(EFFECT_TYPE_ACTIVATE)
+	e3:SetCode(EVENT_FREE_CHAIN)
+	e3:SetHintTiming(0,TIMINGS_CHECK_MONSTER+TIMING_MAIN_END)
+	e3:SetCountLimit(1,id+EFFECT_COUNT_CODE_OATH)
+	e3:SetCondition(s.actcon)
+	e3:SetTarget(s.target)
+	e3:SetOperation(s.activate)
+	c:RegisterEffect(e3)
 end
 
-function s.handcon(e)
+function s.quickcon(e)
 	return Duel.GetTurnPlayer()~=e:GetHandlerPlayer()
 end
 
